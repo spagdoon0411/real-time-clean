@@ -6,4 +6,5 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "pyaudio>=0.2.14",
+    "google-cloud-speech>=2.26.0",
 ]
