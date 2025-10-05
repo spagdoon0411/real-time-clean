@@ -154,6 +154,7 @@ def main():
         min_word_count=10,
         min_time_since_dump=5.0,
         enable_automatic_punctuation=True,
+        restart_interval_seconds=300.0,
     )
 
     audio_stream = LocalAudioStream(rate=16000, channels=1, chunk_size=1024)

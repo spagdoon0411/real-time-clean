@@ -25,6 +25,7 @@ class TranscriberConfig:
     model: str = "default"
     vertex_project_id: Optional[str] = None
     vertex_location: str = "us-central1"
+    restart_interval_seconds: float = 300.0
 
 
 class Transcriber:
@@ -49,7 +50,9 @@ class Transcriber:
 
         self._last_interim_text: str = ""
         self._last_dump_time: float = time.time()
+        self._stream_start_time: float = time.time()
         self._is_running = False
+        self._needs_restart = False
         self._transcription_thread: Optional[threading.Thread] = None
         self._lock = threading.Lock()
 
@@ -67,6 +70,13 @@ class Transcriber:
                 word_count >= self.config.min_word_count
                 and time_since_dump >= self.config.min_time_since_dump
             )
+
+    def _should_restart_stream(self) -> bool:
+        if self.config.restart_interval_seconds <= 0:
+            return False
+
+        time_since_start = time.time() - self._stream_start_time
+        return time_since_start >= self.config.restart_interval_seconds
 
     def _dump_to_long_term(self) -> None:
         with self._lock:
@@ -185,6 +195,11 @@ class Transcriber:
             if not self._is_running:
                 break
 
+            if self._should_restart_stream():
+                logger.info("Stream restart interval reached, triggering restart")
+                self._needs_restart = True
+                break
+
             if not response.results:
                 continue
 
@@ -236,14 +251,36 @@ class Transcriber:
                 self._dump_to_long_term()
 
     def _transcription_loop(self) -> None:
-        try:
-            streaming_config = self._create_streaming_config()
-            audio_stream = self._audio_generator()
-            responses = self.client.streaming_recognize(streaming_config, audio_stream)
-            self._process_responses(responses)
-        except Exception as e:
-            logger.error(f"Transcription error: {e}", exc_info=True)
-            self._is_running = False
+        while self._is_running:
+            try:
+                self._stream_start_time = time.time()
+                self._needs_restart = False
+
+                logger.info(
+                    f"Starting transcription stream (restart interval: {self.config.restart_interval_seconds}s)"
+                )
+
+                streaming_config = self._create_streaming_config()
+                audio_stream = self._audio_generator()
+                responses = self.client.streaming_recognize(
+                    streaming_config, audio_stream
+                )
+                self._process_responses(responses)
+
+                if self._needs_restart and self._is_running:
+                    logger.info("Performing stream restart: dumping working buffer")
+                    if self.working_buffer:
+                        self._dump_to_long_term()
+                    logger.info("Stream restart complete, restarting recognition")
+                    continue
+
+            except Exception as e:
+                logger.error(f"Transcription error: {e}", exc_info=True)
+                if self._is_running:
+                    logger.warning("Error in transcription, restarting in 2 seconds...")
+                    time.sleep(2)
+                else:
+                    break
 
     def start(self) -> None:
         if self._is_running:
@@ -297,6 +334,7 @@ class Transcriber:
             self.long_term_buffer = ""
             self._last_interim_text = ""
             self._last_dump_time = time.time()
+            self._stream_start_time = time.time()
 
     def __enter__(self):
         self.start()

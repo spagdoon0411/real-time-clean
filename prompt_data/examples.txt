@@ -34,7 +34,7 @@ Topic: supply-and-demand
 - The Law of Demand: As price increases, quantity demanded decreases
 - The Law of Supply: As price increases, quantity supplied increases
 - Market Equilibrium: The price at which the quantity supplied equals the quantity demanded
-- Factors that cause shifts in the supply or demand curves, such as changes in technology or consumer preferences
+- Factors that cause shifts in the supply or dmand curves, such as changes in technology or consumer preferences
 
 Topic: fall-of-the-roman-empire
 - A gradual, complex process of decline rather than a single event
