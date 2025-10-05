@@ -94,6 +94,7 @@ class Transcriber:
             logger.debug(f"Chunking result: {result}")
 
             complete_chunks = result.get("complete_chunks", {})
+            chunk_blurbs = result.get("chunk_blurbs", {})
             incomplete_text = result.get("incomplete_text", "")
             topic_descriptions = result.get("topic_descriptions", {})
 
@@ -103,10 +104,21 @@ class Transcriber:
 
             with self._lock:
                 if complete_chunks:
-                    for topic_id, content in complete_chunks.items():
+                    for topic_id, contents in complete_chunks.items():
+                        blurbs = chunk_blurbs.get(topic_id, [])
                         description = topic_descriptions.get(topic_id, "")
-                        self.topic_manager.add_chunk(topic_id, content, description)
-                        logger.info(f"Added chunk to topic: {topic_id}")
+
+                        for content, blurb in zip(contents, blurbs):
+                            self.topic_manager.add_chunk(
+                                topic_id=topic_id,
+                                chunk_content=content,
+                                chunk_blurb=blurb,
+                                topic_description=description,
+                            )
+                            logger.info(
+                                f"Added chunk to topic: {topic_id} with blurb: '{blurb}'"
+                            )
+
                         if description:
                             logger.info(f"Updated description for topic {topic_id}")
 

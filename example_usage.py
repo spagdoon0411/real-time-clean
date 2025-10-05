@@ -85,14 +85,14 @@ class TranscriptionFrame(Frame):
             for topic_id, topic in all_topics.items():
                 chunks_display += f"━━━ {topic_id.upper()} ━━━\n"
                 if topic.description:
-                    chunks_display += f"📝 {topic.description}\n"
+                    chunks_display += f"📝 Topic: {topic.description}\n"
                 chunks_display += f"({len(topic.chunk_stack)} chunk{'s' if len(topic.chunk_stack) != 1 else ''})\n\n"
 
-                for i, chunk_content in enumerate(topic.chunk_stack, 1):
-                    chunk_lines = chunk_content.split("\n")
-                    for line in chunk_lines:
-                        chunks_display += f"  #{i}: {line}\n"
-                    chunks_display += "\n"
+                for i, chunk in enumerate(topic.chunk_stack, 1):
+                    chunks_display += f"  Chunk #{i}:\n"
+                    if chunk.blurb:
+                        chunks_display += f"    📝 {chunk.blurb}\n"
+                    chunks_display += f"    💬 {chunk.content}\n\n"
                 chunks_display += "\n"
             self.chunks_text.value = chunks_display.strip()
         else:
@@ -132,9 +132,11 @@ def print_all_chunks(topic_manager):
         print(f"Chunks: {len(topic.chunk_stack)}")
         print("━" * 70 + "\n")
 
-        for i, chunk_content in enumerate(topic.chunk_stack, 1):
+        for i, chunk in enumerate(topic.chunk_stack, 1):
             print(f"Chunk #{i}:")
-            print(chunk_content + "\n")
+            if chunk.blurb:
+                print(f"  📝 Blurb: {chunk.blurb}")
+            print(f"  💬 Content: {chunk.content}\n")
 
     print("=" * 70)
     print(f"Total topics: {len(all_topics)}")

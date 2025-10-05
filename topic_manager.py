@@ -1,12 +1,18 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from dataclasses import dataclass, field
 import threading
 
 
 @dataclass
+class Chunk:
+    blurb: str
+    content: str
+
+
+@dataclass
 class Topic:
     description: str
-    chunk_stack: List[str] = field(default_factory=list)
+    chunk_stack: List[Chunk] = field(default_factory=list)
 
 
 class TopicManager:
@@ -14,10 +20,17 @@ class TopicManager:
         self._topics: Dict[str, Topic] = {}
         self._lock = threading.Lock()
 
-    def add_chunk(self, topic_id: str, chunk: str, description: str = "") -> None:
+    def add_chunk(
+        self,
+        topic_id: str,
+        chunk_content: str,
+        chunk_blurb: str = "",
+        topic_description: str = "",
+    ) -> None:
         with self._lock:
             if topic_id not in self._topics:
-                self._topics[topic_id] = Topic(description=description)
+                self._topics[topic_id] = Topic(description=topic_description)
+            chunk = Chunk(blurb=chunk_blurb, content=chunk_content)
             self._topics[topic_id].chunk_stack.append(chunk)
 
     def update_description(self, topic_id: str, description: str) -> None:
@@ -47,13 +60,13 @@ class TopicManager:
         with self._lock:
             return {topic_id: topic for topic_id, topic in self._topics.items()}
 
-    def get_chunks_for_topic(self, topic_id: str) -> List[str]:
+    def get_chunks_for_topic(self, topic_id: str) -> List[Chunk]:
         with self._lock:
             if topic_id in self._topics:
                 return list(self._topics[topic_id].chunk_stack)
             return []
 
-    def get_all_chunks(self) -> Dict[str, List[str]]:
+    def get_all_chunks(self) -> Dict[str, List[Chunk]]:
         with self._lock:
             return {
                 topic_id: list(topic.chunk_stack)

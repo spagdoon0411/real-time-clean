@@ -14,20 +14,28 @@ def main():
 
     print("\n1. Adding chunks to topics...")
     tm.add_chunk(
-        "introduction", "Hello everyone, welcome to the demo.", "Opening remarks"
+        topic_id="introduction",
+        chunk_content="Hello everyone, welcome to the demo.",
+        chunk_blurb="Introduction and greeting",
+        topic_description="Opening remarks",
     )
     tm.add_chunk(
-        "introduction", "Today we'll cover three main points.", "Opening remarks"
+        topic_id="introduction",
+        chunk_content="Today we'll cover three main points.",
+        chunk_blurb="Overview of agenda",
+        topic_description="Opening remarks",
     )
     tm.add_chunk(
-        "main_argument",
-        "First, let's discuss the architecture.",
-        "Technical discussion",
+        topic_id="main_argument",
+        chunk_content="First, let's discuss the architecture.",
+        chunk_blurb="Architecture overview",
+        topic_description="Technical discussion",
     )
     tm.add_chunk(
-        "example_1",
-        "Here's a concrete example of how it works.",
-        "Practical demonstration",
+        topic_id="example_1",
+        chunk_content="Here's a concrete example of how it works.",
+        chunk_blurb="Practical demonstration",
+        topic_description="Practical demonstration",
     )
 
     print("\n2. Getting topic summaries:")
@@ -48,7 +56,9 @@ def main():
         print(f"   Description: {topic.description}")
         print(f"   Chunks ({len(topic.chunk_stack)}):")
         for i, chunk in enumerate(topic.chunk_stack, 1):
-            print(f"      #{i}: {chunk}")
+            print(f"      #{i}:")
+            print(f"         Blurb: {chunk.blurb}")
+            print(f"         Content: {chunk.content}")
 
     print("\n6. Getting chunks for specific topic:")
     intro_chunks = tm.get_chunks_for_topic("introduction")
